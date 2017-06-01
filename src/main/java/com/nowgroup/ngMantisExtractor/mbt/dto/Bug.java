@@ -38,6 +38,9 @@ import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
+import org.hibernate.annotations.NotFound;
+import org.hibernate.annotations.NotFoundAction;
+
 /**
  * @author https://github.com/diego-torres
  *
@@ -55,7 +58,7 @@ public class Bug implements Serializable {
 	private Integer priority;
 	private Integer severity;
 	private String summary;
-	private Integer submited;
+	private Integer submitted;
 
 	private List<Tag> tags = new ArrayList<>();
 
@@ -130,8 +133,9 @@ public class Bug implements Serializable {
 	/**
 	 * @return the handler
 	 */
-	@ManyToOne
+	@ManyToOne(optional = true)
 	@JoinColumn(name = "handler_id")
+	@NotFound(action = NotFoundAction.IGNORE)
 	public User getHandler() {
 		return handler;
 	}
@@ -195,17 +199,17 @@ public class Bug implements Serializable {
 	/**
 	 * @return the submited
 	 */
-	@Column
-	public Integer getSubmited() {
-		return submited;
+	@Column(name = "date_submitted")
+	public Integer getSubmitted() {
+		return submitted;
 	}
 
 	/**
 	 * @param submited
 	 *            the submited to set
 	 */
-	public void setSubmited(Integer submited) {
-		this.submited = submited;
+	public void setSubmitted(Integer submitted) {
+		this.submitted = submitted;
 	}
 
 	/**

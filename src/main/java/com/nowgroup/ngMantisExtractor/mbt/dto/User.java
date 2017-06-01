@@ -25,7 +25,11 @@ package com.nowgroup.ngMantisExtractor.mbt.dto;
 
 import java.io.Serializable;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
 import javax.persistence.Table;
 
 /**
@@ -45,6 +49,8 @@ public class User implements Serializable {
 	/**
 	 * @return the id
 	 */
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	public Integer getId() {
 		return id;
 	}
@@ -60,6 +66,7 @@ public class User implements Serializable {
 	/**
 	 * @return the userName
 	 */
+	@Column(name="username")
 	public String getUserName() {
 		return userName;
 	}
@@ -75,6 +82,7 @@ public class User implements Serializable {
 	/**
 	 * @return the realName
 	 */
+	@Column(name="realname")
 	public String getRealName() {
 		return realName;
 	}
@@ -90,6 +98,7 @@ public class User implements Serializable {
 	/**
 	 * @return the email
 	 */
+	@Column
 	public String getEmail() {
 		return email;
 	}
@@ -105,6 +114,7 @@ public class User implements Serializable {
 	/**
 	 * @return the enabled
 	 */
+	@Column
 	public Integer getEnabled() {
 		return enabled;
 	}
