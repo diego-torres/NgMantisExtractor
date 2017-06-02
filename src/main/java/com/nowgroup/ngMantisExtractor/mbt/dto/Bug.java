@@ -54,6 +54,7 @@ public class Bug implements Serializable {
 	private Integer id;
 	private Category category;
 	private Project project;
+	private BugText bugText;
 
 	private User reporter;
 	private User handler;
@@ -114,6 +115,23 @@ public class Bug implements Serializable {
 	 */
 	public void setProject(Project project) {
 		this.project = project;
+	}
+
+	/**
+	 * @return the bugText
+	 */
+	@ManyToOne
+	@JoinColumn(name = "bug_text_id")
+	public BugText getBugText() {
+		return bugText;
+	}
+
+	/**
+	 * @param bugText
+	 *            the bugText to set
+	 */
+	public void setBugText(BugText bugText) {
+		this.bugText = bugText;
 	}
 
 	/**

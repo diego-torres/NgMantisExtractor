@@ -24,14 +24,20 @@
 package com.nowgroup.ngMantisExtractor.mbt.controller;
 
 import java.util.List;
+import java.util.stream.StreamSupport;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.nowgroup.ngMantisExtractor.mbt.dto.Bug;
+import com.nowgroup.ngMantisExtractor.mbt.dto.User;
+import com.nowgroup.ngMantisExtractor.mbt.repo.UserRepository;
+
+import biz.futureware.mantisconnect.IssueData;
 
 /**
  * @author https://github.com/diego-torres
@@ -46,14 +52,43 @@ public class ApiRestController {
 	@Autowired
 	private MantisSoapClient soapClient;
 
+	@Autowired
+	private UserRepository usersRepository;
+
+	@Value("${NgMantisExtractor.bot.username}")
+	private String mtbtBotUserName;
+
 	@GetMapping(path = "/new")
 	public @ResponseBody String gatherNew() {
 		List<Bug> newBugs = bugController.getNewBugs();
 		newBugs.forEach(bug -> {
-			soapClient.ackNAssign(bug.getId());
-			// TODO: Validate and create annotation if validation failed; label to retry.
-			// TODO: Store validated to database.
+			soapClient.ackNAssign(ackIssueData(bug));
+			integrate(bug);
 		});
 		return "OK";
+	}
+
+	private void integrate(Bug bug) {
+		// TODO: validate exists in supply_chain
+		// TODO: If does not exists, create annotation and label for retry.
+		// TODO: Store validated to database.
+	}
+
+	private IssueData ackIssueData(Bug bug) {
+		IssueData issueData = new IssueData();
+
+		issueData.setId(bug.getId());
+		issueData.setHandler(findUserByName(mtbtBotUserName));
+		issueData.setReporter(bug.getReporter());
+		issueData.setProject(bug.getProject());
+		issueData.setCategory(bug.getCategory().getName());
+		issueData.setSummary(bug.getSummary());
+		issueData.setDescription(bug.getBugText().getDescription());
+
+		return issueData;
+	}
+
+	private User findUserByName(String userName) {
+		return StreamSupport.stream(usersRepository.findAll().spliterator(), false).findFirst().orElse(null);
 	}
 }
