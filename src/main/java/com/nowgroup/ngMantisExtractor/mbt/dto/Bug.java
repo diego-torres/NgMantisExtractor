@@ -29,6 +29,7 @@ import java.util.List;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -36,6 +37,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 import org.hibernate.annotations.NotFound;
@@ -61,6 +63,7 @@ public class Bug implements Serializable {
 	private Integer submitted;
 
 	private List<Tag> tags = new ArrayList<>();
+	private List<CustomFieldString> customFields = new ArrayList<>();
 
 	/**
 	 * @return the id
@@ -227,5 +230,22 @@ public class Bug implements Serializable {
 	 */
 	public void setTags(List<Tag> tags) {
 		this.tags = tags;
+	}
+
+	/**
+	 * @return the customFields
+	 */
+	@OneToMany(mappedBy = "key.bug", fetch = FetchType.EAGER)
+	@NotFound(action = NotFoundAction.IGNORE)
+	public List<CustomFieldString> getCustomFields() {
+		return customFields;
+	}
+
+	/**
+	 * @param customFields
+	 *            the customFields to set
+	 */
+	public void setCustomFields(List<CustomFieldString> customFields) {
+		this.customFields = customFields;
 	}
 }

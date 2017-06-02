@@ -21,40 +21,61 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.nowgroup.ngMantisExtractor.mbt.controller;
+package com.nowgroup.ngMantisExtractor.mbt.dto;
 
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
+import java.io.Serializable;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
+import javax.persistence.Embeddable;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 
-import com.nowgroup.ngMantisExtractor.mbt.dto.Bug;
-import com.nowgroup.ngMantisExtractor.mbt.repo.BugRepository;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 /**
  * @author https://github.com/diego-torres
  *
  */
-@Controller
-@RequestMapping(path = "/bug")
-public class BugRestController {
-	@Autowired
-	private BugRepository repository;
+@Embeddable
+@JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
+public class CustomFieldStringKey implements Serializable {
+	private static final long serialVersionUID = 1L;
+	private Bug bug;
+	private CustomField field;
 
-	@GetMapping(path = "/all")
-	public @ResponseBody Iterable<Bug> getAllBugs() {
-		return repository.findAll();
+	/**
+	 * @return the bug<
+	 */
+	@ManyToOne
+	@JoinColumn(name = "bug_id")
+	@JsonIgnore
+	public Bug getBug() {
+		return bug;
 	}
 
-	@GetMapping(path = "/new")
-	public @ResponseBody List<Bug> getNewBugs() {
-		return StreamSupport.stream(repository.findAll().spliterator(), false).filter(e -> {
-			return e.getHandler() == null;
-		}).collect(Collectors.toList());
+	/**
+	 * @param bug
+	 *            the bug to set
+	 */
+	public void setBug(Bug bug) {
+		this.bug = bug;
 	}
+
+	/**
+	 * @return the field
+	 */
+	@ManyToOne
+	@JoinColumn(name = "field_id")
+	public CustomField getField() {
+		return field;
+	}
+
+	/**
+	 * @param field
+	 *            the field to set
+	 */
+	public void setField(CustomField field) {
+		this.field = field;
+	}
+
 }

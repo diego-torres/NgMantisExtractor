@@ -24,8 +24,6 @@
 package com.nowgroup.ngMantisExtractor.mbt.controller;
 
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -34,27 +32,28 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.nowgroup.ngMantisExtractor.mbt.dto.Bug;
-import com.nowgroup.ngMantisExtractor.mbt.repo.BugRepository;
 
 /**
  * @author https://github.com/diego-torres
  *
  */
 @Controller
-@RequestMapping(path = "/bug")
-public class BugRestController {
+@RequestMapping(path = "/api")
+public class ApiRestController {
 	@Autowired
-	private BugRepository repository;
+	private BugRestController bugController;
 
-	@GetMapping(path = "/all")
-	public @ResponseBody Iterable<Bug> getAllBugs() {
-		return repository.findAll();
-	}
+	@Autowired
+	private MantisSoapClient soapClient;
 
 	@GetMapping(path = "/new")
-	public @ResponseBody List<Bug> getNewBugs() {
-		return StreamSupport.stream(repository.findAll().spliterator(), false).filter(e -> {
-			return e.getHandler() == null;
-		}).collect(Collectors.toList());
+	public @ResponseBody String gatherNew() {
+		List<Bug> newBugs = bugController.getNewBugs();
+		newBugs.forEach(bug -> {
+			soapClient.ackNAssign(bug.getId());
+			// TODO: Validate and create annotation if validation failed; label to retry.
+			// TODO: Store validated to database.
+		});
+		return "OK";
 	}
 }

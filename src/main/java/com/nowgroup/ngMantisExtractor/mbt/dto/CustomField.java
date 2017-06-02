@@ -21,40 +21,59 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.nowgroup.ngMantisExtractor.mbt.controller;
+package com.nowgroup.ngMantisExtractor.mbt.dto;
 
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
+import java.io.Serializable;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
-
-import com.nowgroup.ngMantisExtractor.mbt.dto.Bug;
-import com.nowgroup.ngMantisExtractor.mbt.repo.BugRepository;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
 
 /**
  * @author https://github.com/diego-torres
  *
  */
-@Controller
-@RequestMapping(path = "/bug")
-public class BugRestController {
-	@Autowired
-	private BugRepository repository;
+@Entity
+@Table(name = "mantis_custom_field_table")
+public class CustomField implements Serializable {
+	private static final long serialVersionUID = 1L;
+	private Integer id;
+	private String name;
 
-	@GetMapping(path = "/all")
-	public @ResponseBody Iterable<Bug> getAllBugs() {
-		return repository.findAll();
+	/**
+	 * @return the id
+	 */
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	public Integer getId() {
+		return id;
 	}
 
-	@GetMapping(path = "/new")
-	public @ResponseBody List<Bug> getNewBugs() {
-		return StreamSupport.stream(repository.findAll().spliterator(), false).filter(e -> {
-			return e.getHandler() == null;
-		}).collect(Collectors.toList());
+	/**
+	 * @param id
+	 *            the id to set
+	 */
+	public void setId(Integer id) {
+		this.id = id;
 	}
+
+	/**
+	 * @return the name
+	 */
+	@Column
+	public String getName() {
+		return name;
+	}
+
+	/**
+	 * @param name
+	 *            the name to set
+	 */
+	public void setName(String name) {
+		this.name = name;
+	}
+
 }

@@ -23,38 +23,21 @@
  */
 package com.nowgroup.ngMantisExtractor.mbt.controller;
 
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
+import javax.xml.soap.SOAPMessage;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
-
-import com.nowgroup.ngMantisExtractor.mbt.dto.Bug;
-import com.nowgroup.ngMantisExtractor.mbt.repo.BugRepository;
 
 /**
  * @author https://github.com/diego-torres
  *
  */
 @Controller
-@RequestMapping(path = "/bug")
-public class BugRestController {
-	@Autowired
-	private BugRepository repository;
-
-	@GetMapping(path = "/all")
-	public @ResponseBody Iterable<Bug> getAllBugs() {
-		return repository.findAll();
+public class MantisSoapClient {
+	public String ackNAssign(int id) {
+		return "OK";
 	}
 
-	@GetMapping(path = "/new")
-	public @ResponseBody List<Bug> getNewBugs() {
-		return StreamSupport.stream(repository.findAll().spliterator(), false).filter(e -> {
-			return e.getHandler() == null;
-		}).collect(Collectors.toList());
+	private static SOAPMessage createSoapRequest() {
+		return null;
 	}
 }
