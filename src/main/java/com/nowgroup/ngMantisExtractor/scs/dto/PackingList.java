@@ -21,57 +21,55 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.nowgroup.ngMantisExtractor;
+package com.nowgroup.ngMantisExtractor.scs.dto;
 
 import java.io.Serializable;
 import java.util.Date;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 
 /**
  * @author https://github.com/diego-torres
  *
  */
-public class ChangeRequest implements Serializable {
+@Entity
+@Table(name="scs_packing_list", schema="scs_io")
+public class PackingList implements Serializable {
 	private static final long serialVersionUID = 1L;
-	private int bugId;
-	private Integer ngPackingListId;
-	private String packingList;
+	private Integer packingListId;
 	private String salesOrder;
-	private Date requestedDeliveryDate;
-	private Boolean requestedLock;
+	private String packingList;
+	private Date deliveryDate;
+	private Boolean hold = false;
 
 	/**
-	 * @return the bugId
+	 * @return the packingListId
 	 */
-	public int getBugId() {
-		return bugId;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	public Integer getPackingListId() {
+		return packingListId;
 	}
 
 	/**
-	 * @param bugId
-	 *            the bugId to set
+	 * @param packingListId
+	 *            the packingListId to set
 	 */
-	public void setBugId(int bugId) {
-		this.bugId = bugId;
-	}
-
-	/**
-	 * @return the packingList
-	 */
-	public String getPackingList() {
-		return packingList;
-	}
-
-	/**
-	 * @param packingList
-	 *            the packingList to set
-	 */
-	public void setPackingList(String packingList) {
-		this.packingList = packingList;
+	public void setPackingListId(Integer packingListId) {
+		this.packingListId = packingListId;
 	}
 
 	/**
 	 * @return the salesOrder
 	 */
+	@Column
 	public String getSalesOrder() {
 		return salesOrder;
 	}
@@ -85,47 +83,52 @@ public class ChangeRequest implements Serializable {
 	}
 
 	/**
-	 * @return the requestedDeliveryDate
+	 * @return the packingList
 	 */
-	public Date getRequestedDeliveryDate() {
-		return requestedDeliveryDate;
+	@Column
+	public String getPackingList() {
+		return packingList;
 	}
 
 	/**
-	 * @param requestedDeliveryDate
-	 *            the requestedDeliveryDate to set
+	 * @param packingList
+	 *            the packingList to set
 	 */
-	public void setRequestedDeliveryDate(Date requestedDeliveryDate) {
-		this.requestedDeliveryDate = requestedDeliveryDate;
+	public void setPackingList(String packingList) {
+		this.packingList = packingList;
 	}
 
 	/**
-	 * @return the requestedLock
+	 * @return the deliveryDate
 	 */
-	public Boolean getRequestedLock() {
-		return requestedLock;
+	@Column
+	@Temporal(TemporalType.DATE)
+	public Date getDeliveryDate() {
+		return deliveryDate;
 	}
 
 	/**
-	 * @param requestedLock
-	 *            the requestedLock to set
+	 * @param deliveryDate
+	 *            the deliveryDate to set
 	 */
-	public void setRequestedLock(Boolean requestedLock) {
-		this.requestedLock = requestedLock;
+	public void setDeliveryDate(Date deliveryDate) {
+		this.deliveryDate = deliveryDate;
 	}
 
 	/**
-	 * @return the ngPackingListId
+	 * @return the hold
 	 */
-	public Integer getNgPackingListId() {
-		return ngPackingListId;
+	@Column
+	public Boolean getHold() {
+		return hold;
 	}
 
 	/**
-	 * @param ngPackingListId the ngPackingListId to set
+	 * @param hold
+	 *            the hold to set
 	 */
-	public void setNgPackingListId(Integer ngPackingListId) {
-		this.ngPackingListId = ngPackingListId;
+	public void setHold(Boolean hold) {
+		this.hold = hold;
 	}
 
 }

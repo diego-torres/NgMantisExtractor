@@ -21,19 +21,16 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.nowgroup.ngMantisExtractor;
+package com.nowgroup.ngMantisExtractor.scs.repo;
+
+import org.springframework.data.repository.CrudRepository;
+
+import com.nowgroup.ngMantisExtractor.scs.dto.ChangeRequest;
 
 /**
  * @author https://github.com/diego-torres
  *
  */
-public class Program {
-
-	/**
-	 * @param args
-	 */
-	public static void main(String[] args) {
-		// TODO: Read New Requests
-	}
+public interface ChangeRequestRepository extends CrudRepository<ChangeRequest, Integer> {
 
 }

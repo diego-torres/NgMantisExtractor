@@ -21,33 +21,16 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.nowgroup.ngMantisExtractor;
+package com.nowgroup.ngMantisExtractor.scs.repo;
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.ComponentScan;
+import org.springframework.data.repository.CrudRepository;
 
-import com.nowgroup.ngMantisExtractor.mbt.controller.BugRestController;
-import com.nowgroup.ngMantisExtractor.mbt.dto.Bug;
-import com.nowgroup.ngMantisExtractor.mbt.repo.BugRepository;
 import com.nowgroup.ngMantisExtractor.scs.dto.PackingList;
-import com.nowgroup.ngMantisExtractor.scs.repo.PackingListRepository;
 
 /**
  * @author https://github.com/diego-torres
  *
  */
-@SpringBootApplication
-@ComponentScan(basePackageClasses = { Bug.class, BugRepository.class, BugRestController.class, PackingList.class,
-		PackingListRepository.class })
-public class Application {
-
-	/**
-	 * @param args
-	 */
-	public static void main(String[] args) {
-		SpringApplication.run(Application.class, args);
-		System.out.println("Nowgroup Mantis Bug Tracker extractor :: Web API is running");
-	}
+public interface PackingListRepository extends CrudRepository<PackingList, Integer> {
 
 }

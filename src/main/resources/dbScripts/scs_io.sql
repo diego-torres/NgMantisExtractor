@@ -7,6 +7,8 @@ CREATE TABLE IF NOT EXISTS `scs_packing_list`
 );
 CREATE TABLE IF NOT EXISTS `mtbt_out` 
 ( `id` INTEGER NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  `category` VARCHAR(20),
+  `bug_id` INTEGER NOT NULL,
   `packing_list_id` INTEGER,
   `sales_order` VARCHAR(20) NOT NULL,
   `packing_list` VARCHAR(50) NOT NULL,
