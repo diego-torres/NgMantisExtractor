@@ -25,9 +25,10 @@ package com.nowgroup.ngMantisExtractor.mbt.controller;
 
 import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -73,6 +74,11 @@ public class ApiRestController {
 	@Value("${NgMantisExtractor.bot.username}")
 	private String mtbtBotUserName;
 
+	@Value("${NgMantisExtractor.max-retry}")
+	private Integer maxRetry;
+
+	private Map<String, Integer> retryMap = new HashMap<>();
+
 	@GetMapping(path = "/new")
 	public @ResponseBody String gatherNew() {
 		List<Bug> newBugs = bugController.getNewBugs();
@@ -81,6 +87,19 @@ public class ApiRestController {
 			// TODO: Handle fail.
 			integrate(bug);
 		});
+		return "OK";
+	}
+
+	@GetMapping(path = "/retry")
+	public @ResponseBody String gatherRetry() {
+		List<Bug> retryBugs = bugController.getRetryTaggedBugs();
+		// TODO: iterate the retry bugs: validate existence and integrate if
+		// resolved or else add them to the retry map++
+		return "OK";
+	}
+
+	public String gatherAssigned() {
+		// TODO: Assigned to bot user + feedback status.
 		return "OK";
 	}
 
@@ -118,7 +137,10 @@ public class ApiRestController {
 			if ("unhold".equalsIgnoreCase(cr.getCategory()))
 				cr.setRequestedLock(false);
 
+			// TODO: Split CR to packing list ids.
+
 			changeRequestRepository.save(cr);
+			// TODO: Change status to resolved
 		}
 	}
 

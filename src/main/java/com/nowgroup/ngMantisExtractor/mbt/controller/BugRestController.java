@@ -57,4 +57,11 @@ public class BugRestController {
 			return e.getHandler() == null;
 		}).collect(Collectors.toList());
 	}
+	
+	@GetMapping(path = "/retry")
+	public @ResponseBody List<Bug> getRetryTaggedBugs() {
+		return StreamSupport.stream(repository.findAll().spliterator(), false).filter(e -> {
+			return e.getTags().stream().anyMatch(t -> "retry".equalsIgnoreCase(t.getName()));
+		}).collect(Collectors.toList());
+	}
 }

@@ -7,3 +7,5 @@ spring:
   jpa:
     database-platform: org.hibernate.dialect.MySQL5Dialect
     show-sql: true
+NgMantisExtractor:
+  max-retry: 30
