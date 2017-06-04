@@ -23,13 +23,19 @@
  */
 package com.nowgroup.ngMantisExtractor.mbt.controller;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Spliterator;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
+
+import javax.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -43,10 +49,12 @@ import com.nowgroup.ngMantisExtractor.mbt.dto.CustomFieldString;
 import com.nowgroup.ngMantisExtractor.mbt.dto.User;
 import com.nowgroup.ngMantisExtractor.mbt.repo.UserRepository;
 import com.nowgroup.ngMantisExtractor.scs.dto.ChangeRequest;
+import com.nowgroup.ngMantisExtractor.scs.dto.PackingList;
 import com.nowgroup.ngMantisExtractor.scs.repo.ChangeRequestRepository;
 import com.nowgroup.ngMantisExtractor.scs.repo.PackingListRepository;
 
 import biz.futureware.mantisconnect.IssueData;
+import biz.futureware.mantisconnect.IssueResolution;
 import biz.futureware.mantisconnect.IssueStatus;
 
 /**
@@ -93,75 +101,80 @@ public class ApiRestController {
 	@GetMapping(path = "/retry")
 	public @ResponseBody String gatherRetry() {
 		List<Bug> retryBugs = bugController.getRetryTaggedBugs();
-		// TODO: iterate the retry bugs: validate existence and integrate if
-		// resolved or else add them to the retry map++
-		return "OK";
-	}
-
-	public String gatherAssigned() {
-		// TODO: Assigned to bot user + feedback status.
+		for (Bug retryBug : retryBugs) {
+			// validate existence
+			if (validateExists(retryBug)) {
+				// TODO: Handle fail.
+				integrate(retryBug);
+			} else {
+				String mapKey = salesOrderFromBug(retryBug).concat("||").concat(packingListFromBug(retryBug));
+				if (retryMap.containsKey(mapKey)) {
+					retryMap.replace(mapKey, retryMap.getOrDefault(mapKey, 0) + 1);
+					if (retryMap.getOrDefault(mapKey, 0) > maxRetry) {
+						retryMap.remove(mapKey);
+						// Add note
+						soapClient.addNote(retryBug.getId(),
+								"Unable to find sales order || packing list: " + mapKey + ".");
+						// change status and reassign to requester.
+						soapClient.assignIssue(this.rejectIssueData(retryBug));
+					}
+				} else {
+					retryMap.put(mapKey, 1);
+				}
+			}
+		}
 		return "OK";
 	}
 
 	private void integrate(Bug bug) {
 		if (validate(bug)) {
-			ChangeRequest cr = new ChangeRequest();
-			cr.setBugId(bug.getId());
-			cr.setCategory(bug.getCategory().getName());
+			String packingList = packingListFromBug(bug);
+			String salesOrder = salesOrderFromBug(bug);
 
-			CustomFieldString cfPackingList = bug.getCustomFields().stream().filter(cf -> {
-				return "packing list".equalsIgnoreCase(cf.getKey().getField().getName());
-			}).findFirst().orElse(null);
-
-			if (cfPackingList != null)
-				cr.setPackingList(cfPackingList.getValue());
-
-			CustomFieldString cfSalesOrder = bug.getCustomFields().stream().filter(cf -> {
-				return "sales order".equalsIgnoreCase(cf.getKey().getField().getName());
-			}).findFirst().orElse(null);
-
-			if (cfSalesOrder != null)
-				cr.setSalesOrder(cfSalesOrder.getValue());
-
-			if ("change delivery date".equalsIgnoreCase(cr.getCategory())) {
-				CustomFieldString cfDeliveryDate = bug.getCustomFields().stream().filter(cf -> {
-					return "delivery date".equalsIgnoreCase(cf.getKey().getField().getName());
-				}).findFirst().orElse(null);
-				cr.setRequestedDeliveryDate(
-						new Date(TimeUnit.SECONDS.toMillis(Long.parseLong(cfDeliveryDate.getValue()))));
+			// Split CR to packing list ids.
+			if (null == packingList || "".equals(packingList)) {
+				List<Integer> salesOrderPackingLists = packingListIdFromSalesOrder(bug);
+				salesOrderPackingLists.forEach(p -> storeChangeRequest(bug, p));
+			} else {
+				// single request for packing list.
+				storeChangeRequest(bug, packingListId(bug));
 			}
-
-			if ("hold".equalsIgnoreCase(cr.getCategory()))
-				cr.setRequestedLock(true);
-
-			if ("unhold".equalsIgnoreCase(cr.getCategory()))
-				cr.setRequestedLock(false);
-
-			// TODO: Split CR to packing list ids.
-
-			changeRequestRepository.save(cr);
-			// TODO: Change status to resolved
+			// Change status to resolved
+			soapClient.assignIssue(this.resolveIssueData(bug));
 		}
 	}
 
+	private void storeChangeRequest(Bug bug, int packingListId) {
+		ChangeRequest cr = new ChangeRequest();
+		cr.setBugId(bug.getId());
+		cr.setNgPackingListId(packingListId);
+		cr.setCategory(bug.getCategory().getName());
+		cr.setPackingList(packingListFromBug(bug));
+		cr.setSalesOrder(salesOrderFromBug(bug));
+
+		if ("change delivery date".equalsIgnoreCase(cr.getCategory())) {
+			CustomFieldString cfDeliveryDate = bug.getCustomFields().stream().filter(cf -> {
+				return "delivery date".equalsIgnoreCase(cf.getKey().getField().getName());
+			}).findFirst().orElse(null);
+			cr.setRequestedDeliveryDate(new Date(TimeUnit.SECONDS.toMillis(Long.parseLong(cfDeliveryDate.getValue()))));
+		}
+
+		if ("hold".equalsIgnoreCase(cr.getCategory()))
+			cr.setRequestedLock(true);
+
+		if ("unhold".equalsIgnoreCase(cr.getCategory()))
+			cr.setRequestedLock(false);
+
+		changeRequestRepository.save(cr);
+	}
+
 	private boolean validate(Bug bug) {
-
-		CustomFieldString cfPackingList = bug.getCustomFields().stream().filter(cf -> {
-			return "packing list".equalsIgnoreCase(cf.getKey().getField().getName());
-		}).findFirst().orElse(null);
-
-		CustomFieldString cfSalesOrder = bug.getCustomFields().stream().filter(cf -> {
-			return "sales order".equalsIgnoreCase(cf.getKey().getField().getName());
-		}).findFirst().orElse(null);
+		String packingList = packingListFromBug(bug);
+		String salesOrder = salesOrderFromBug(bug);
 
 		if (bug.getTags().isEmpty()) {
 			// validate exists in supply_chain
-			if (!(StreamSupport.stream(packingListRepository.findAll().spliterator(), false)
-					.anyMatch(b -> b.getPackingList().equalsIgnoreCase(cfPackingList.getValue()))
-					|| StreamSupport.stream(packingListRepository.findAll().spliterator(), false)
-							.anyMatch(b -> b.getSalesOrder().equalsIgnoreCase(cfSalesOrder.getValue())))) {
-				System.out.println("annotate and label for retry");
-
+			if (!validateExists(bug)) {
 				// label for retry
 				soapClient.tagRetry(bug.getId());
 				return false;
@@ -169,15 +182,13 @@ public class ApiRestController {
 		}
 
 		// Validate either packing list or sales order is present.
-		if ((null == cfPackingList || null == cfPackingList.getValue() || "".equals(cfPackingList.getValue().trim()))
-				&& (null == cfSalesOrder || null == cfSalesOrder.getValue()
-						|| "".equals(cfSalesOrder.getValue().trim()))) {
+		if ((null == packingList || "".equals(packingList)) && (null == salesOrder || "".equals(salesOrder))) {
 
 			// Add note
 			soapClient.addNote(bug.getId(),
 					"Either packing list or sales order must be specified for this request to proceed.");
 			// change status and reassign to requester.
-			soapClient.assignIssue(this.feedbackIssueData(bug));
+			soapClient.assignIssue(this.rejectIssueData(bug));
 			// Handle SOAP Failure
 			return false;
 		}
@@ -195,7 +206,7 @@ public class ApiRestController {
 				soapClient.addNote(bug.getId(),
 						"You must provide a delivery date for a change delivery date request type.");
 				// change status and reassign to requester.
-				soapClient.assignIssue(this.feedbackIssueData(bug));
+				soapClient.assignIssue(this.rejectIssueData(bug));
 				return false;
 			}
 
@@ -203,22 +214,97 @@ public class ApiRestController {
 			Date today = new Date();
 			// deliveryDate.before(LocalDateTime.from(today.toInstant()).plusDays(2)))
 
-			if (LocalDateTime.from(deliveryDate.toInstant())
-					.isBefore(LocalDateTime.from(today.toInstant()).plusDays(2))) {
+			if (LocalDate.from(deliveryDate.toInstant().atZone(ZoneId.of("UTC")))
+					.isBefore(LocalDate.from(today.toInstant().atZone(ZoneId.of("UTC"))).plusDays(2))) {
 				// Add note
 				soapClient.addNote(bug.getId(),
 						"Your request to change delivery date must allow at least 2 days to arrange the change.");
 				// change status and reassign to requester.
-				soapClient.assignIssue(this.feedbackIssueData(bug));
+				soapClient.assignIssue(this.rejectIssueData(bug));
+				return false;
 			}
 		}
 
 		return true;
 	}
 
-	private IssueData feedbackIssueData(Bug bug) {
+	private boolean validateExists(Bug bug) {
+		String packingList = packingListFromBug(bug);
+		boolean packingListExists = packingListStream().anyMatch(b -> b.getPackingList().equalsIgnoreCase(packingList));
+		String salesOrder = salesOrderFromBug(bug);
+		boolean salesOrderExists = packingListStream().anyMatch(b -> b.getSalesOrder().equalsIgnoreCase(salesOrder));
+		return packingListExists || salesOrderExists;
+	}
+
+	private Integer packingListId(Bug bug) {
+		String packingListName = packingListFromBug(bug);
+		if (null == packingListName)
+			return null;
+		Stream<PackingList> streamPackingList = packingListStream();
+
+		PackingList packingList = streamPackingList.filter(b -> b.getPackingList().equalsIgnoreCase(packingListName))
+				.findFirst().orElse(null);
+
+		if (null == packingList)
+			return null;
+		else
+			return packingList.getPackingListId();
+	}
+
+	private List<Integer> packingListIdFromSalesOrder(Bug bug) {
+		String salesOrderName = salesOrderFromBug(bug);
+		if (null == salesOrderName)
+			return null;
+		Stream<PackingList> streamPackingList = packingListStream();
+
+		return streamPackingList.filter(b -> salesOrderName.equalsIgnoreCase(b.getSalesOrder()))
+				.mapToInt(b -> b.getPackingListId()).boxed().collect(Collectors.toList());
+	}
+
+	private Stream<PackingList> packingListStream() {
+		Spliterator<PackingList> plSpliterator = packingListRepository.findAll().spliterator();
+		return StreamSupport.stream(plSpliterator, false);
+	}
+
+	private String packingListFromBug(Bug bug) {
+		CustomFieldString cfPackingList = bug.getCustomFields().stream()
+				.filter(cf -> "packing list".equalsIgnoreCase(cf.getKey().getField().getName())).findFirst()
+				.orElse(null);
+
+		if (null == cfPackingList || null == cfPackingList.getValue())
+			return null;
+		return cfPackingList.getValue();
+	}
+
+	private String salesOrderFromBug(Bug bug) {
+		CustomFieldString cfSalesOrder = bug.getCustomFields().stream()
+				.filter(cf -> "sales order".equalsIgnoreCase(cf.getKey().getField().getName())).findFirst()
+				.orElse(null);
+		if (null == cfSalesOrder || null == cfSalesOrder.getValue())
+			return null;
+		return cfSalesOrder.getValue();
+	}
+
+	private IssueData resolveIssueData(Bug bug) {
 		IssueData issueData = new IssueData();
-		issueData.setiStatus(IssueStatus.FEEDBACK);
+		issueData.setiStatus(IssueStatus.RESOLVED);
+		issueData.setiResolution(IssueResolution.FIXED);
+
+		issueData.setId(bug.getId());
+		issueData.setHandler(bug.getReporter());
+		issueData.setReporter(bug.getReporter());
+		issueData.setProject(bug.getProject());
+		issueData.setCategory(bug.getCategory().getName());
+		issueData.setSummary(bug.getSummary());
+		issueData.setDescription(bug.getBugText().getDescription());
+
+		return issueData;
+	}
+
+	private IssueData rejectIssueData(Bug bug) {
+		IssueData issueData = new IssueData();
+		issueData.setiStatus(IssueStatus.RESOLVED);
+		issueData.setiResolution(IssueResolution.WONT_FIX_IT);
 
 		issueData.setId(bug.getId());
 		issueData.setHandler(bug.getReporter());

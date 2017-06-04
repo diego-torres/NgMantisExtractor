@@ -40,7 +40,7 @@ import javax.persistence.TemporalType;
  *
  */
 @Entity
-@Table(name = "mtbt_out", schema = "scs_io")
+@Table(name = "mtbt_out")
 public class ChangeRequest implements Serializable {
 	private static final long serialVersionUID = 1L;
 	private Integer id;
@@ -104,7 +104,7 @@ public class ChangeRequest implements Serializable {
 	/**
 	 * @return the packingList
 	 */
-	@Column
+	@Column(name="packing_list")
 	public String getPackingList() {
 		return packingList;
 	}
@@ -120,7 +120,7 @@ public class ChangeRequest implements Serializable {
 	/**
 	 * @return the salesOrder
 	 */
-	@Column
+	@Column(name="sales_order")
 	public String getSalesOrder() {
 		return salesOrder;
 	}

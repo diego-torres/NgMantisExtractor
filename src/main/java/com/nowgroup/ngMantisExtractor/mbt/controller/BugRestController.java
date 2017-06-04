@@ -23,9 +23,12 @@
  */
 package com.nowgroup.ngMantisExtractor.mbt.controller;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
+
+import javax.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -47,21 +50,20 @@ public class BugRestController {
 	private BugRepository repository;
 
 	@GetMapping(path = "/all")
-	public @ResponseBody Iterable<Bug> getAllBugs() {
-		return repository.findAll();
+	public @ResponseBody List<Bug> getAllBugs() {
+		return StreamSupport.stream(repository.findAll().spliterator(), false).filter(e -> e.getStatus() < 80)
+				.collect(Collectors.toList());
 	}
 
 	@GetMapping(path = "/new")
 	public @ResponseBody List<Bug> getNewBugs() {
-		return StreamSupport.stream(repository.findAll().spliterator(), false).filter(e -> {
-			return e.getHandler() == null;
-		}).collect(Collectors.toList());
+		return getAllBugs().stream().filter(e -> e.getHandler() == null).collect(Collectors.toList());
 	}
-	
+
 	@GetMapping(path = "/retry")
 	public @ResponseBody List<Bug> getRetryTaggedBugs() {
-		return StreamSupport.stream(repository.findAll().spliterator(), false).filter(e -> {
-			return e.getTags().stream().anyMatch(t -> "retry".equalsIgnoreCase(t.getName()));
-		}).collect(Collectors.toList());
+		return getAllBugs().stream()
+				.filter(e -> e.getTags().stream().anyMatch(t -> "retry".equalsIgnoreCase(t.getName())))
+				.collect(Collectors.toList());
 	}
 }

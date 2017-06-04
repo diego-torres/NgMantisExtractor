@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/bugtracker
+    url: jdbc:mysql://localhost:3306/scs_io
     username: root
     password: 
     driver-class-name: com.mysql.jdbc.Driver
@@ -9,3 +9,4 @@ spring:
     show-sql: true
 NgMantisExtractor:
   max-retry: 30
+  mantis-db-url: jdbc:mysql://localhost:3306/bugtracker

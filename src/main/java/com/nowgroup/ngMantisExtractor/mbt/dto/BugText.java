@@ -81,7 +81,7 @@ public class BugText implements Serializable {
 	/**
 	 * @return the stepsToReproduce
 	 */
-	@Column
+	@Column(name="steps_to_reproduce")
 	public String getStepsToReproduce() {
 		return stepsToReproduce;
 	}
@@ -97,7 +97,7 @@ public class BugText implements Serializable {
 	/**
 	 * @return the additionalInformation
 	 */
-	@Column
+	@Column(name="additional_information")
 	public String getAdditionalInformation() {
 		return additionalInformation;
 	}

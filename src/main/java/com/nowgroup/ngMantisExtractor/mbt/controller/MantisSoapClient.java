@@ -132,8 +132,8 @@ public class MantisSoapClient {
 
 		return result;
 	}
-	
-	public String addNote(int issueId, String note){
+
+	public String addNote(int issueId, String note) {
 		String result = "OK";
 		try {
 			SOAPConnectionFactory soapConnectionFactory = SOAPConnectionFactory.newInstance();
@@ -166,7 +166,7 @@ public class MantisSoapClient {
 		SOAPElement issueNoteAddElement = soapBody.addChildElement("mc_issue_note_add", namespace_prefix);
 		issueNoteAddElement.addChildElement("username").addTextNode(mtbtUserName);
 		issueNoteAddElement.addChildElement("password").addTextNode(mtbtPassword);
-		issueNoteAddElement.addChildElement("issueId").addTextNode(String.valueOf(issueId));
+		issueNoteAddElement.addChildElement("issue_id").addTextNode(String.valueOf(issueId));
 
 		SOAPElement noteElement = issueNoteAddElement.addChildElement("note");
 		noteElement.addChildElement("text").setTextContent(note);
@@ -239,7 +239,7 @@ public class MantisSoapClient {
 
 		SOAPElement issueStatusElement = issueElement.addChildElement("status");
 		issueStatusElement.addChildElement("id").addTextNode(String.valueOf(issueData.getiStatus().id()));
-		issueStatusElement.addChildElement("name").addTextNode(String.valueOf(issueData.getiStatus().statusName()));
+		issueStatusElement.addChildElement("name").addTextNode(issueData.getiStatus().statusName());
 
 		SOAPElement handlerElement = issueElement.addChildElement("handler");
 		handlerElement.addChildElement("id").addTextNode(String.valueOf(issueData.getHandler().getId()));
@@ -256,6 +256,10 @@ public class MantisSoapClient {
 		SOAPElement projectElement = issueElement.addChildElement("project");
 		projectElement.addChildElement("id").addTextNode(String.valueOf(issueData.getProject().getId()));
 		projectElement.addChildElement("name").addTextNode(issueData.getProject().getName());
+
+		SOAPElement resolutionElement = issueElement.addChildElement("resolution");
+		resolutionElement.addChildElement("id").addTextNode(String.valueOf(issueData.getiResolution().id()));
+		resolutionElement.addChildElement("name").addTextNode(issueData.getiResolution().name());
 
 		soapMessage.saveChanges();
 		return soapMessage;

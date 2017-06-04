@@ -28,8 +28,6 @@ import java.util.HashMap;
 import javax.sql.DataSource;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -42,8 +40,6 @@ import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
 
-import com.nowgroup.ngMantisExtractor.mbt.controller.BugRestController;
-import com.nowgroup.ngMantisExtractor.mbt.repo.BugRepository;
 import com.nowgroup.ngMantisExtractor.scs.dto.ChangeRequest;
 import com.nowgroup.ngMantisExtractor.scs.repo.ChangeRequestRepository;
 
@@ -51,15 +47,48 @@ import com.nowgroup.ngMantisExtractor.scs.repo.ChangeRequestRepository;
  * @author https://github.com/diego-torres
  *
  */
-@SpringBootApplication
-public class Application {
+@Configuration
+@EnableJpaRepositories(basePackageClasses = {
+		ChangeRequestRepository.class }, entityManagerFactoryRef = "platformEntityManager", transactionManagerRef = "platformTransactionManager")
+public class ScsInOutConfiguration {
+	@Autowired
+	private Environment env;
 
-	/**
-	 * @param args
-	 */
-	public static void main(String[] args) {
-		SpringApplication.run(Application.class, args);
-		System.out.println("Nowgroup Mantis Bug Tracker extractor :: Web API is running");
+	@Primary
+	@Bean
+	public LocalContainerEntityManagerFactoryBean platformEntityManager() {
+		LocalContainerEntityManagerFactoryBean em = new LocalContainerEntityManagerFactoryBean();
+		em.setDataSource(platformDataSource());
+		em.setPackagesToScan(new String[] { "com.nowgroup.ngMantisExtractor.scs.dto" });
+
+		HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
+		em.setJpaVendorAdapter(vendorAdapter);
+		HashMap<String, Object> properties = new HashMap<>();
+		properties.put("hibernate.dialect", env.getProperty("spring.jpa.database-platform"));
+
+		em.setJpaPropertyMap(properties);
+
+		return em;
 	}
 
+	@Primary
+	@Bean
+	public DataSource platformDataSource() {
+		DriverManagerDataSource dataSource = new DriverManagerDataSource();
+
+		dataSource.setDriverClassName(env.getProperty("spring.datasource.driver-class-name"));
+		dataSource.setUrl(env.getProperty("spring.datasource.url"));
+		dataSource.setUsername(env.getProperty("spring.datasource.username"));
+		dataSource.setPassword(env.getProperty("spring.datasource.password"));
+
+		return dataSource;
+	}
+
+	@Primary
+	@Bean
+	public PlatformTransactionManager platformTransactionManager() {
+		JpaTransactionManager transactionManager = new JpaTransactionManager();
+		transactionManager.setEntityManagerFactory(platformEntityManager().getObject());
+		return transactionManager;
+	}
 }

@@ -40,7 +40,7 @@ import javax.persistence.TemporalType;
  *
  */
 @Entity
-@Table(name="scs_packing_list", schema="scs_io")
+@Table(name="scs_packing_list")
 public class PackingList implements Serializable {
 	private static final long serialVersionUID = 1L;
 	private Integer packingListId;
@@ -54,6 +54,7 @@ public class PackingList implements Serializable {
 	 */
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name="packing_list_id")
 	public Integer getPackingListId() {
 		return packingListId;
 	}
@@ -69,7 +70,7 @@ public class PackingList implements Serializable {
 	/**
 	 * @return the salesOrder
 	 */
-	@Column
+	@Column(name="sales_order")
 	public String getSalesOrder() {
 		return salesOrder;
 	}
@@ -85,7 +86,7 @@ public class PackingList implements Serializable {
 	/**
 	 * @return the packingList
 	 */
-	@Column
+	@Column(name="packing_list")
 	public String getPackingList() {
 		return packingList;
 	}
@@ -101,7 +102,7 @@ public class PackingList implements Serializable {
 	/**
 	 * @return the deliveryDate
 	 */
-	@Column
+	@Column(name="delivery_date")
 	@Temporal(TemporalType.DATE)
 	public Date getDeliveryDate() {
 		return deliveryDate;

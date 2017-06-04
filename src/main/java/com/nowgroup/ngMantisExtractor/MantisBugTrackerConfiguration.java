@@ -28,12 +28,9 @@ import java.util.HashMap;
 import javax.sql.DataSource;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
 import org.springframework.core.env.Environment;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
@@ -42,24 +39,56 @@ import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
 
+import com.nowgroup.ngMantisExtractor.mbt.controller.ApiRestController;
 import com.nowgroup.ngMantisExtractor.mbt.controller.BugRestController;
+import com.nowgroup.ngMantisExtractor.mbt.dto.Bug;
 import com.nowgroup.ngMantisExtractor.mbt.repo.BugRepository;
-import com.nowgroup.ngMantisExtractor.scs.dto.ChangeRequest;
-import com.nowgroup.ngMantisExtractor.scs.repo.ChangeRequestRepository;
 
 /**
  * @author https://github.com/diego-torres
  *
  */
-@SpringBootApplication
-public class Application {
+@Configuration
+@ComponentScan(basePackageClasses = { BugRestController.class })
+@EnableJpaRepositories(basePackageClasses = {
+		BugRepository.class }, entityManagerFactoryRef = "mantisEntityManager", transactionManagerRef = "mantisTransactionManager")
+public class MantisBugTrackerConfiguration {
+	@Autowired
+	private Environment env;
 
-	/**
-	 * @param args
-	 */
-	public static void main(String[] args) {
-		SpringApplication.run(Application.class, args);
-		System.out.println("Nowgroup Mantis Bug Tracker extractor :: Web API is running");
+	@Bean
+	public LocalContainerEntityManagerFactoryBean mantisEntityManager() {
+		LocalContainerEntityManagerFactoryBean em = new LocalContainerEntityManagerFactoryBean();
+		em.setDataSource(mantisDataSource());
+		em.setPackagesToScan(new String[] { "com.nowgroup.ngMantisExtractor.mbt.dto" });
+
+		HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
+		em.setJpaVendorAdapter(vendorAdapter);
+		HashMap<String, Object> properties = new HashMap<>();
+		properties.put("hibernate.dialect", env.getProperty("spring.jpa.database-platform"));
+		properties.put("hibernate.enable_lazy_load_no_trans", true);
+
+		em.setJpaPropertyMap(properties);
+
+		return em;
 	}
 
+	@Bean
+	public DataSource mantisDataSource() {
+		DriverManagerDataSource dataSource = new DriverManagerDataSource();
+
+		dataSource.setDriverClassName(env.getProperty("spring.datasource.driver-class-name"));
+		dataSource.setUrl(env.getProperty("NgMantisExtractor.mantis-db-url"));
+		dataSource.setUsername(env.getProperty("spring.datasource.username"));
+		dataSource.setPassword(env.getProperty("spring.datasource.password"));
+
+		return dataSource;
+	}
+
+	@Bean
+	public PlatformTransactionManager mantisTransactionManager() {
+		JpaTransactionManager transactionManager = new JpaTransactionManager();
+		transactionManager.setEntityManagerFactory(mantisEntityManager().getObject());
+		return transactionManager;
+	}
 }

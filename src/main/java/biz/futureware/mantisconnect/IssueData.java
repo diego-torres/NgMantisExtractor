@@ -33,6 +33,7 @@ import com.nowgroup.ngMantisExtractor.mbt.dto.User;
 public class IssueData {
 	private int id;
 	private IssueStatus iStatus = IssueStatus.NEW;
+	private IssueResolution iResolution = IssueResolution.OPEN;
 	private User handler;
 	private User reporter;
 	private ViewState viewState = new ViewState(10, "public");
@@ -69,6 +70,20 @@ public class IssueData {
 	 */
 	public void setiStatus(IssueStatus iStatus) {
 		this.iStatus = iStatus;
+	}
+
+	/**
+	 * @return the iResolution
+	 */
+	public IssueResolution getiResolution() {
+		return iResolution;
+	}
+
+	/**
+	 * @param iResolution the iResolution to set
+	 */
+	public void setiResolution(IssueResolution iResolution) {
+		this.iResolution = iResolution;
 	}
 
 	/**

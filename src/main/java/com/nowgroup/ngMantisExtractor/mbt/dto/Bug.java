@@ -62,6 +62,8 @@ public class Bug implements Serializable {
 	private Integer severity;
 	private String summary;
 	private Integer submitted;
+	private Integer status;
+	private Integer resolution;
 
 	private List<Tag> tags = new ArrayList<>();
 	private List<CustomFieldString> customFields = new ArrayList<>();
@@ -234,6 +236,38 @@ public class Bug implements Serializable {
 	}
 
 	/**
+	 * @return the status
+	 */
+	@Column
+	public Integer getStatus() {
+		return status;
+	}
+
+	/**
+	 * @param status
+	 *            the status to set
+	 */
+	public void setStatus(Integer status) {
+		this.status = status;
+	}
+
+	/**
+	 * @return the resolution
+	 */
+	@Column
+	public Integer getResolution() {
+		return resolution;
+	}
+
+	/**
+	 * @param resolution
+	 *            the resolution to set
+	 */
+	public void setResolution(Integer resolution) {
+		this.resolution = resolution;
+	}
+
+	/**
 	 * @return the tags
 	 */
 	@ManyToMany
@@ -265,5 +299,18 @@ public class Bug implements Serializable {
 	 */
 	public void setCustomFields(List<CustomFieldString> customFields) {
 		this.customFields = customFields;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "Bug [id=" + id + ", category=" + category + ", project=" + project + ", bugText=" + bugText
+				+ ", reporter=" + reporter + ", handler=" + handler + ", priority=" + priority + ", severity="
+				+ severity + ", summary=" + summary + ", submitted=" + submitted + ", status=" + status
+				+ ", resolution=" + resolution + ", tags=" + tags + ", customFields=" + customFields + "]";
 	}
 }
