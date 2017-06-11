@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS `mtbt_out`
   `packing_list_id` INTEGER,
   `sales_order` VARCHAR(20) NOT NULL,
   `packing_list` VARCHAR(50) NOT NULL,
-  `delivery_date` DATE NOT NULL,
+  `delivery_date` DATE,
   `hold` BIT NOT NULL DEFAULT 0,
   `log` VARCHAR(250),
   `transfering` BIT NOT NULL DEFAULT 0,
