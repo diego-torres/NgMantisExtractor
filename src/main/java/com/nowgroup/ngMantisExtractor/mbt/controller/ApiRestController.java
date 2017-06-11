@@ -305,7 +305,7 @@ public class ApiRestController {
 		issueData.setiResolution(IssueResolution.FIXED);
 
 		issueData.setId(bug.getId());
-		issueData.setHandler(bug.getReporter());
+		issueData.setHandler(bug.getHandler());
 		issueData.setReporter(bug.getReporter());
 		issueData.setProject(bug.getProject());
 		issueData.setCategory(bug.getCategory().getName());
@@ -321,7 +321,7 @@ public class ApiRestController {
 		issueData.setiResolution(IssueResolution.WONT_FIX_IT);
 
 		issueData.setId(bug.getId());
-		issueData.setHandler(bug.getReporter());
+		issueData.setHandler(bug.getHandler());
 		issueData.setReporter(bug.getReporter());
 		issueData.setProject(bug.getProject());
 		issueData.setCategory(bug.getCategory().getName());
