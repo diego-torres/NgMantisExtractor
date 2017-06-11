@@ -93,4 +93,9 @@ public class Tag implements Serializable {
 		this.description = description;
 	}
 
+	@Override
+	public String toString() {
+		return "Tag [id=" + id + ", name=" + name + ", description=" + description + "]";
+	}
+
 }

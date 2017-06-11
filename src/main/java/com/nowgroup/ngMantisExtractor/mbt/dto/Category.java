@@ -39,12 +39,13 @@ import javax.persistence.Table;
  *
  */
 @Entity
-@Table(name="mantis_category_table")
+@Table(name = "mantis_category_table")
 public class Category implements Serializable {
 	private static final long serialVersionUID = 1L;
 	private Integer id;
 	private Project project;
 	private String name;
+
 	/**
 	 * @return the id
 	 */
@@ -53,26 +54,32 @@ public class Category implements Serializable {
 	public Integer getId() {
 		return id;
 	}
+
 	/**
-	 * @param id the id to set
+	 * @param id
+	 *            the id to set
 	 */
 	public void setId(Integer id) {
 		this.id = id;
 	}
+
 	/**
 	 * @return the project
 	 */
 	@ManyToOne
-	@JoinColumn(name="project_id")
+	@JoinColumn(name = "project_id")
 	public Project getProject() {
 		return project;
 	}
+
 	/**
-	 * @param project the project to set
+	 * @param project
+	 *            the project to set
 	 */
 	public void setProject(Project project) {
 		this.project = project;
 	}
+
 	/**
 	 * @return the name
 	 */
@@ -80,12 +87,18 @@ public class Category implements Serializable {
 	public String getName() {
 		return name;
 	}
+
 	/**
-	 * @param name the name to set
+	 * @param name
+	 *            the name to set
 	 */
 	public void setName(String name) {
 		this.name = name;
 	}
-	
-	
+
+	@Override
+	public String toString() {
+		return "Category [id=" + id + ", project=" + project + ", name=" + name + "]";
+	}
+
 }

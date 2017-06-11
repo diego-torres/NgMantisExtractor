@@ -35,8 +35,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import javax.transaction.Transactional;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
@@ -64,6 +64,8 @@ import biz.futureware.mantisconnect.IssueStatus;
 @Controller
 @RequestMapping(path = "/api")
 public class ApiRestController {
+	private static final Logger logger = LoggerFactory.getLogger(ApiRestController.class);
+
 	@Autowired
 	private BugRestController bugController;
 
@@ -89,13 +91,23 @@ public class ApiRestController {
 
 	@GetMapping(path = "/new")
 	public @ResponseBody String gatherNew() {
+		logger.info("START - Executing gatherNew()");
+		String result = "OK";
 		List<Bug> newBugs = bugController.getNewBugs();
-		newBugs.forEach(bug -> {
-			soapClient.assignIssue(ackIssueData(bug));
-			// TODO: Handle fail.
-			integrate(bug);
-		});
-		return "OK";
+		for (Bug bug : newBugs) {
+			logger.debug("Processing new issue: " + bug);
+			String assignment = soapClient.assignIssue(ackIssueData(bug));
+			if ("OK".equalsIgnoreCase(assignment)) {
+				logger.debug("Issue ready to integrate: " + bug);
+				integrate(bug);
+			} else {
+				logger.warn("failed to assign issue: " + bug);
+				result = "FAIL";
+				break;
+			}
+		}
+		logger.info("END - Executing gatherNew() with result " + result);
+		return result;
 	}
 
 	@GetMapping(path = "/retry")
@@ -112,11 +124,7 @@ public class ApiRestController {
 					retryMap.replace(mapKey, retryMap.getOrDefault(mapKey, 0) + 1);
 					if (retryMap.getOrDefault(mapKey, 0) > maxRetry) {
 						retryMap.remove(mapKey);
-						// Add note
-						soapClient.addNote(retryBug.getId(),
-								"Unable to find sales order || packing list: " + mapKey + ".");
-						// change status and reassign to requester.
-						soapClient.assignIssue(this.rejectIssueData(retryBug));
+						rejectIssue(retryBug, "Unable to find sales order || packing list: " + mapKey + ".");
 					}
 				} else {
 					retryMap.put(mapKey, 1);
@@ -127,6 +135,7 @@ public class ApiRestController {
 	}
 
 	private void integrate(Bug bug) {
+		logger.info("START - integrate(" + bug + ")");
 		if (validate(bug)) {
 			String packingList = packingListFromBug(bug);
 			String salesOrder = salesOrderFromBug(bug);
@@ -134,17 +143,24 @@ public class ApiRestController {
 			// Split CR to packing list ids.
 			if (null == packingList || "".equals(packingList)) {
 				List<Integer> salesOrderPackingLists = packingListIdFromSalesOrder(bug);
+				logger.debug("Processing a list of packing lists [" + salesOrderPackingLists.size()
+						+ "] based in sales order [" + salesOrder + "].");
 				salesOrderPackingLists.forEach(p -> storeChangeRequest(bug, p));
 			} else {
+				logger.debug("Processing a single packing list[" + packingList + "]");
 				// single request for packing list.
 				storeChangeRequest(bug, packingListId(bug));
 			}
 			// Change status to resolved
 			soapClient.assignIssue(this.resolveIssueData(bug));
+		} else {
+			logger.warn("Unable to complete integration, validation failed for: " + bug);
 		}
+		logger.info("END - integrate(" + bug + ")");
 	}
 
 	private void storeChangeRequest(Bug bug, int packingListId) {
+		logger.info("START - storeChangeRequest(" + bug + ", " + packingListId + ")");
 		ChangeRequest cr = new ChangeRequest();
 		cr.setBugId(bug.getId());
 		cr.setNgPackingListId(packingListId);
@@ -166,6 +182,7 @@ public class ApiRestController {
 			cr.setRequestedLock(false);
 
 		changeRequestRepository.save(cr);
+		logger.info("END - storeChangeRequest(" + bug + ", " + packingListId + ")");
 	}
 
 	private boolean validate(Bug bug) {
@@ -175,21 +192,16 @@ public class ApiRestController {
 		if (bug.getTags().isEmpty()) {
 			// validate exists in supply_chain
 			if (!validateExists(bug)) {
-				// label for retry
-				soapClient.tagRetry(bug.getId());
+				String rejectMessage = "Packing List [" + packingList + "] or Sales Order [" + salesOrder
+						+ "] not found in Supply Chain Software, please try this change in the internal Oracle Records.";
+				rejectIssue(bug, rejectMessage);
 				return false;
 			}
 		}
 
 		// Validate either packing list or sales order is present.
 		if ((null == packingList || "".equals(packingList)) && (null == salesOrder || "".equals(salesOrder))) {
-
-			// Add note
-			soapClient.addNote(bug.getId(),
-					"Either packing list or sales order must be specified for this request to proceed.");
-			// change status and reassign to requester.
-			soapClient.assignIssue(this.rejectIssueData(bug));
-			// Handle SOAP Failure
+			rejectIssue(bug, "Either packing list or sales order must be specified for this request to proceed.");
 			return false;
 		}
 
@@ -202,11 +214,7 @@ public class ApiRestController {
 			if (null == cfDeliveryDate || null == cfDeliveryDate.getValue()
 					|| "".equals(cfDeliveryDate.getValue().trim())) {
 				// If fail to include delivery date: change status
-				// Add note
-				soapClient.addNote(bug.getId(),
-						"You must provide a delivery date for a change delivery date request type.");
-				// change status and reassign to requester.
-				soapClient.assignIssue(this.rejectIssueData(bug));
+				rejectIssue(bug, "You must provide a delivery date for a change delivery date request type.");
 				return false;
 			}
 
@@ -216,16 +224,22 @@ public class ApiRestController {
 
 			if (LocalDate.from(deliveryDate.toInstant().atZone(ZoneId.of("UTC")))
 					.isBefore(LocalDate.from(today.toInstant().atZone(ZoneId.of("UTC"))).plusDays(2))) {
-				// Add note
-				soapClient.addNote(bug.getId(),
+				rejectIssue(bug,
 						"Your request to change delivery date must allow at least 2 days to arrange the change.");
-				// change status and reassign to requester.
-				soapClient.assignIssue(this.rejectIssueData(bug));
 				return false;
 			}
 		}
 
 		return true;
+	}
+
+	private void rejectIssue(Bug bug, String rejectReason) {
+		logger.warn("Rejecting " + bug + " due to the following reason: " + rejectReason);
+		// Add note
+		soapClient.addNote(bug.getId(), rejectReason);
+		// change status and reassign to requester.
+		soapClient.assignIssue(this.rejectIssueData(bug));
+		// TODO: Handle SOAP failure
 	}
 
 	private boolean validateExists(Bug bug) {

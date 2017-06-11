@@ -66,7 +66,7 @@ public class User implements Serializable {
 	/**
 	 * @return the userName
 	 */
-	@Column(name="username")
+	@Column(name = "username")
 	public String getUserName() {
 		return userName;
 	}
@@ -82,7 +82,7 @@ public class User implements Serializable {
 	/**
 	 * @return the realName
 	 */
-	@Column(name="realname")
+	@Column(name = "realname")
 	public String getRealName() {
 		return realName;
 	}
@@ -125,5 +125,11 @@ public class User implements Serializable {
 	 */
 	public void setEnabled(Integer enabled) {
 		this.enabled = enabled;
+	}
+
+	@Override
+	public String toString() {
+		return "User [id=" + id + ", userName=" + userName + ", realName=" + realName + ", email=" + email
+				+ ", enabled=" + enabled + "]";
 	}
 }

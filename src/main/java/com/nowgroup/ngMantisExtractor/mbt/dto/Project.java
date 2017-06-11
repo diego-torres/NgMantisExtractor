@@ -37,7 +37,7 @@ import javax.persistence.Table;
  *
  */
 @Entity
-@Table(name="mantis_project_table")
+@Table(name = "mantis_project_table")
 public class Project implements Serializable {
 	private static final long serialVersionUID = 1L;
 	private Integer id;
@@ -108,6 +108,11 @@ public class Project implements Serializable {
 	 */
 	public void setEnabled(Integer enabled) {
 		this.enabled = enabled;
+	}
+
+	@Override
+	public String toString() {
+		return "Project [id=" + id + ", name=" + name + ", description=" + description + ", enabled=" + enabled + "]";
 	}
 
 }

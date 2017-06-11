@@ -78,4 +78,9 @@ public class CustomFieldStringKey implements Serializable {
 		this.field = field;
 	}
 
+	@Override
+	public String toString() {
+		return "CustomFieldStringKey [field=" + field + "]";
+	}
+
 }

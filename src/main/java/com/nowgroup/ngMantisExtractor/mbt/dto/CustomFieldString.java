@@ -35,7 +35,7 @@ import javax.persistence.Table;
  *
  */
 @Entity
-@Table(name="mantis_custom_field_string_table")
+@Table(name = "mantis_custom_field_string_table")
 public class CustomFieldString implements Serializable {
 	private static final long serialVersionUID = 1L;
 	private CustomFieldStringKey key;
@@ -88,6 +88,11 @@ public class CustomFieldString implements Serializable {
 	 */
 	public void setText(String text) {
 		this.text = text;
+	}
+
+	@Override
+	public String toString() {
+		return "CustomFieldString [key=" + key + ", value=" + value + ", text=" + text + "]";
 	}
 
 }

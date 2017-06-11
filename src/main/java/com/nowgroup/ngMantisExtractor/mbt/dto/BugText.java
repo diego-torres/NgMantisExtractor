@@ -81,7 +81,7 @@ public class BugText implements Serializable {
 	/**
 	 * @return the stepsToReproduce
 	 */
-	@Column(name="steps_to_reproduce")
+	@Column(name = "steps_to_reproduce")
 	public String getStepsToReproduce() {
 		return stepsToReproduce;
 	}
@@ -97,7 +97,7 @@ public class BugText implements Serializable {
 	/**
 	 * @return the additionalInformation
 	 */
-	@Column(name="additional_information")
+	@Column(name = "additional_information")
 	public String getAdditionalInformation() {
 		return additionalInformation;
 	}
@@ -108,6 +108,12 @@ public class BugText implements Serializable {
 	 */
 	public void setAdditionalInformation(String additionalInformation) {
 		this.additionalInformation = additionalInformation;
+	}
+
+	@Override
+	public String toString() {
+		return "BugText [id=" + id + ", description=" + description + ", stepsToReproduce=" + stepsToReproduce
+				+ ", additionalInformation=" + additionalInformation + "]";
 	}
 
 }
