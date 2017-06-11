@@ -73,7 +73,7 @@ public class ChangeRequest implements Serializable {
 	/**
 	 * @return the bugId
 	 */
-	@Column
+	@Column(name="bug_id")
 	public Integer getBugId() {
 		return bugId;
 	}
