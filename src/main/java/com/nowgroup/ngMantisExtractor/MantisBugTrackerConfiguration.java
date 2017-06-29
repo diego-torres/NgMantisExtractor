@@ -39,9 +39,7 @@ import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
 
-import com.nowgroup.ngMantisExtractor.mbt.controller.ApiRestController;
 import com.nowgroup.ngMantisExtractor.mbt.controller.BugRestController;
-import com.nowgroup.ngMantisExtractor.mbt.dto.Bug;
 import com.nowgroup.ngMantisExtractor.mbt.repo.BugRepository;
 
 /**

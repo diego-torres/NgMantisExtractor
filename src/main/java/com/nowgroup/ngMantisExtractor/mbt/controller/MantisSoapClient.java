@@ -33,11 +33,8 @@ import javax.xml.soap.SOAPException;
 import javax.xml.soap.SOAPMessage;
 import javax.xml.soap.SOAPPart;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
-
-import com.nowgroup.ngMantisExtractor.mbt.repo.UserRepository;
 
 import biz.futureware.mantisconnect.IssueData;
 
@@ -211,7 +208,7 @@ public class MantisSoapClient {
 		issueSetTagsElement.addChildElement("password").addTextNode(mtbtPassword);
 		issueSetTagsElement.addChildElement("issueId").addTextNode(String.valueOf(issueId));
 
-		SOAPElement tagsElement = soapBody.addChildElement("tags");
+		soapBody.addChildElement("tags");
 
 		soapMessage.saveChanges();
 		return soapMessage;
