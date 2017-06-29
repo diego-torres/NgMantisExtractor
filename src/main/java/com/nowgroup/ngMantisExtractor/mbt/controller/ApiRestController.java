@@ -149,7 +149,15 @@ public class ApiRestController {
 			} else {
 				logger.debug("Processing a single packing list[" + packingList + "]");
 				// single request for packing list.
-				storeChangeRequest(bug, packingListId(bug));
+				Integer pid = packingListId(bug);
+				if(pid != null)
+					storeChangeRequest(bug, packingListId(bug));
+				else {
+					String rejectMessage = "Packing List [" + packingList + "] or Sales Order [" + salesOrder
+							+ "] not found in Supply Chain Software, please try this change in the internal Oracle Records.";
+					rejectIssue(bug, rejectMessage);
+					return;
+				}
 			}
 			// Change status to resolved
 			soapClient.assignIssue(this.resolveIssueData(bug));
