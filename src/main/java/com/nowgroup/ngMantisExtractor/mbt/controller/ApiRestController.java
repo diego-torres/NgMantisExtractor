@@ -159,7 +159,7 @@ public class ApiRestController {
 		logger.info("END - integrate(" + bug + ")");
 	}
 
-	private void storeChangeRequest(Bug bug, int packingListId) {
+	private void storeChangeRequest(Bug bug, Integer packingListId) {
 		logger.info("START - storeChangeRequest(" + bug + ", " + packingListId + ")");
 		ChangeRequest cr = new ChangeRequest();
 		cr.setBugId(bug.getId());
